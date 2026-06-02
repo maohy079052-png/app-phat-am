@@ -36,10 +36,11 @@
             margin-bottom: 20px;
         }
         .chinese-text {
-            font-size: 48px;
+            font-size: 42px;
             font-weight: bold;
             color: #1e293b;
             margin: 0;
+            letter-spacing: 4px;
         }
         .pinyin {
             font-size: 18px;
@@ -74,7 +75,7 @@
             display: none;
         }
         .score {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
             margin: 10px 0;
         }
@@ -82,13 +83,15 @@
         .average { color: #f59e0b; }
         .bad { color: #ef4444; }
         
-        .transcript-box {
+        .details-box {
             font-size: 16px;
             color: #475569;
             background: #f1f5f9;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 15px;
+            border-radius: 8px;
             margin-top: 10px;
+            text-align: left;
+            line-height: 1.6;
         }
 
         @keyframes pulse {
@@ -101,49 +104,51 @@
 <body>
 
 <div class="container">
-    <h1>Phát Âm Tiếng Trung</h1>
+    <h1>Chấm Điểm Tiếng Trung</h1>
     
     <div class="word-box">
-        <p class="chinese-text" id="target-cn">你好</p>
-        <p class="pinyin" id="target-pinyin">nǐ hǎo</p>
+        <p class="chinese-text" id="target-cn">我想学汉语</p>
+        <p class="pinyin" id="target-pinyin">w\u01d2 xi\u0103ng xu\u00e9 H\u00e0ny\u01d4</p>
     </div>
 
     <button class="btn" id="record-btn">Nhấn để nói</button>
 
     <div class="result-section" id="result-section">
-        <h3>Kết quả phân tích:</h3>
-        <div class="transcript-box">
-            Bạn đã nói: <strong id="user-transcript" style="color: #1e293b;">...</strong>
-        </div>
         <div class="score" id="score-display">0%</div>
-        <p id="feedback-msg" style="font-weight: 500;"></p>
         
-        <button class="btn" id="next-btn" style="background-color: #3b82f6; margin-top: 15px;">Đổi từ ngẫu nhiên</button>
+        <div class="details-box">
+            • Từ mẫu: <strong id="show-target">...</strong> (Có <span id="target-len">0</span> chữ)<br>
+            • Bạn đọc: <strong id="user-transcript" style="color: #3b82f6;">...</strong><br>
+            • Kết quả: <span id="match-stats" style="font-weight: bold; color: #1e293b;">Đúng 0 / Sai 0</span>
+        </div>
+        
+        <p id="feedback-msg" style="font-weight: 600; margin-top: 15px;"></p>
+        
+        <button class="btn" id="next-btn" style="background-color: #3b82f6; margin-top: 15px;">Đổi câu ngẫu nhiên</button>
     </div>
 </div>
 
 <script>
-    // Danh sách từ vựng mẫu để luyện tập
+    // Danh sách câu mẫu dài một chút để dễ chấm đúng/sai từng chữ
     const wordList = [
-        { cn: "你好", pinyin: "nǐ hǎo" },
-        { cn: "谢谢", pinyin: "xièxie" },
-        { cn: "再见", pinyin: "zàijiàn" },
-        { cn: "中国", pinyin: "Zhōngguó" },
         { cn: "我想学汉语", pinyin: "wǒ xiǎng xué Hànyǔ" },
         { cn: "今天天气很好", pinyin: "jīntiān tiānqì hěn hǎo" },
-        { cn: "你是哪国人", pinyin: "nǐ shì nǎ guó rén" }
+        { cn: "你是哪国人", pinyin: "nǐ shì nǎ guó rén" },
+        { cn: "很高兴认识你", pinyin: "hěn gāoxìng rènshi nǐ" },
+        { cn: "我想吃中国菜", pinyin: "wǒ xiǎng chī Zhōngguócài" },
+        { cn: "你会說英语吗", pinyin: "nǐ huì shuō Yīngyǔ ma" },
+        { cn: "请问洗手间在哪", pinyin: "qǐngwèn xǐshǒujiān zài nǎ" }
     ];
 
     let currentWord = wordList[0];
     
-    // Kiểm tra hỗ trợ trình duyệt
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        alert("Trình duyệt của bạn không hỗ trợ nhận dạng giọng nói. Hãy dùng Google Chrome!");
+        alert("Trình duyệt không hỗ trợ nhận dạng giọng nói. Hãy dùng Google Chrome!");
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'zh-CN'; // Cấu hình nhận diện tiếng Trung Quốc (Phổ thông)
+    recognition.lang = 'zh-CN'; 
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
@@ -155,16 +160,15 @@
     const userTranscript = document.getElementById('user-transcript');
     const scoreDisplay = document.getElementById('score-display');
     const feedbackMsg = document.getElementById('feedback-msg');
+    const showTarget = document.getElementById('show-target');
+    const targetLen = document.getElementById('target-len');
+    const matchStats = document.getElementById('match-stats');
 
     let isRecording = false;
 
-    // Xử lý sự kiện Ghi âm
     recordBtn.addEventListener('click', () => {
-        if (!isRecording) {
-            recognition.start();
-        } else {
-            recognition.stop();
-        }
+        if (!isRecording) recognition.start();
+        else recognition.stop();
     });
 
     recognition.onstart = () => {
@@ -182,77 +186,64 @@
 
     recognition.onresult = (event) => {
         const resultText = event.results[0][0].transcript;
-        // Loại bỏ dấu câu nếu có để so sánh chính xác hơn
+        
+        // Làm sạch loại bỏ dấu câu
         const cleanResult = resultText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！]/g,"");
         const cleanTarget = currentWord.cn.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！]/g,"");
 
-        userTranscript.textContent = resultText;
+        // Đếm số chữ trùng khớp chính xác
+        let correctCount = 0;
+        let targetChars = cleanTarget.split('');
+        let resultChars = cleanResult.split('');
+
+        // Thuật toán đếm số ký tự khớp
+        targetChars.forEach(char => {
+            const index = resultChars.indexOf(char);
+            if (index !== -1) {
+                correctCount++;
+                resultChars.splice(index, 1); // Xóa ký tự đã khớp để tránh đếm trùng
+            }
+        });
+
+        let totalTarget = targetChars.length;
+        let wrongCount = totalTarget - correctCount;
         
-        // Tính toán điểm số dựa trên độ tương đồng chuỗi
-        const score = Math.round(calculateSimilarity(cleanTarget, cleanResult) * 100);
+        // Tính % điểm thực tế dựa trên số chữ đúng
+        let score = Math.round((correctCount / totalTarget) * 100);
+
+        // Hiển thị lên giao diện
+        showTarget.textContent = currentWord.cn;
+        targetLen.textContent = totalTarget;
+        userTranscript.textContent = resultText;
+        matchStats.textContent = `Đúng ${correctCount} / Sai ${wrongCount} chữ`;
         
         displayResult(score);
     };
 
     recognition.onerror = (event) => {
-        alert("Đã xảy ra lỗi nhận diện: " + event.error);
+        alert("Lỗi nhận diện hoặc chưa nói gì: " + event.error);
     };
 
-    // Thuật toán Dice's Coefficient để chấm điểm so sánh 2 chuỗi ký tự Trung Quốc
-    function calculateSimilarity(str1, str2) {
-        if (str1 === str2) return 1.0;
-        if (str1.length < 2 || str2.length < 2) {
-            // Nếu từ quá ngắn, so sánh ký tự trực tiếp
-            let matches = 0;
-            for(let char of str1) {
-                if(str2.includes(char)) matches++;
-            }
-            return matches / Math.max(str1.length, str2.length);
-        }
-
-        const getBigrams = str => {
-            const bigrams = new Set();
-            for (let i = 0; i < str.length - 1; i++) {
-                bigrams.add(str.substring(i, i + 2));
-            }
-            return bigrams;
-        };
-
-        const bigrams1 = getBigrams(str1);
-        const bigrams2 = getBigrams(str2);
-        
-        let intersection = 0;
-        for (let bigram of bigrams1) {
-            if (bigrams2.has(bigram)) intersection++;
-        }
-
-        return (2.0 * intersection) / (bigrams1.size + bigrams2.size);
-    }
-
-    // Hiển thị kết quả & Đánh giá
     function displayResult(score) {
         resultSection.style.display = 'block';
         scoreDisplay.textContent = score + "%";
-        
-        // Reset class màu sắc
         scoreDisplay.className = "score";
         
-        if (score >= 80) {
+        if (score >= 85) {
             scoreDisplay.classList.add('good');
-            feedbackMsg.textContent = "Quá tuyệt vời! Phát âm rất chuẩn.";
+            feedbackMsg.textContent = "Xuất sắc! Phát âm rất chuẩn xác.";
             feedbackMsg.className = "good";
         } else if (score >= 50) {
             scoreDisplay.classList.add('average');
-            feedbackMsg.textContent = "Khá tốt, nhưng cần chú ý hơn thanh điệu nhé.";
+            feedbackMsg.textContent = "Tạm được! Bạn bị sai một vài chữ, hãy thử lại nhé.";
             feedbackMsg.className = "average";
         } else {
             scoreDisplay.classList.add('bad');
-            feedbackMsg.textContent = "Chưa chính xác lắm. Thử lại lần nữa nào!";
+            feedbackMsg.textContent = "Sai hơi nhiều rồi! Cố gắng đọc rõ ràng từng chữ nha.";
             feedbackMsg.className = "bad";
         }
     }
 
-    // Đổi từ ngẫu nhiên
     nextBtn.addEventListener('click', () => {
         const randomIndex = Math.floor(Math.random() * wordList.length);
         currentWord = wordList[randomIndex];
