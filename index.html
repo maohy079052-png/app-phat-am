@@ -3,100 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Chấm Điểm Phát Âm Tiếng Trung</title>
+    <title>App Học Từ Đơn Tiếng Trung</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f4f6f9;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
         }
         .container {
             background-color: white;
             padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
             text-align: center;
             max-width: 450px;
             width: 100%;
         }
         h1 {
-            color: #333;
+            color: #2c3e50;
             font-size: 24px;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 25px;
         }
         .word-box {
-            background-color: #f8f9fa;
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fdfbf7 0%, #f5f7fa 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 30px 20px;
+            margin-bottom: 25px;
         }
         .chinese-text {
-            font-size: 42px;
+            font-size: 56px;
             font-weight: bold;
-            color: #1e293b;
+            color: #2c3e50;
             margin: 0;
-            letter-spacing: 4px;
+            letter-spacing: 2px;
         }
         .pinyin {
-            font-size: 18px;
-            color: #64748b;
-            margin: 5px 0 0 0;
+            font-size: 20px;
+            color: #e67e22;
+            font-weight: 500;
+            margin: 8px 0 2px 0;
+        }
+        .meaning {
+            font-size: 15px;
+            color: #7f8c8d;
+            font-style: italic;
+            margin: 0;
         }
         .btn {
-            background-color: #10b981;
+            background-color: #2ecc71;
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 14px 24px;
             font-size: 16px;
             font-weight: bold;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
             width: 100%;
+            box-shadow: 0 4px 6px rgba(46, 204, 113, 0.2);
         }
         .btn:hover {
-            background-color: #059669;
-        }
-        .btn:disabled {
-            background-color: #cbd5e1;
-            cursor: not-allowed;
+            background-color: #27ae60;
+            transform: translateY(-1px);
         }
         .btn.recording {
-            background-color: #ef4444;
+            background-color: #e74c3c;
             animation: pulse 1.5s infinite;
+            box-shadow: 0 4px 6px rgba(231, 76, 60, 0.2);
         }
         .result-section {
             margin-top: 25px;
             display: none;
+            border-top: 1px solid #edf2f7;
+            padding-top: 20px;
         }
-        .score {
-            font-size: 36px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .good { color: #10b981; }
-        .average { color: #f59e0b; }
-        .bad { color: #ef4444; }
         
+        /* Thanh hiển thị phần trăm Đúng/Sai */
+        .progress-container {
+            display: flex;
+            height: 24px;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #edf2f7;
+            margin: 15px 0;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            line-height: 24px;
+        }
+        .progress-correct {
+            background-color: #2ecc71;
+            transition: width 0.5s ease;
+        }
+        .progress-wrong {
+            background-color: #e74c3c;
+            transition: width 0.5s ease;
+        }
+
         .details-box {
-            font-size: 16px;
-            color: #475569;
-            background: #f1f5f9;
-            padding: 15px;
+            font-size: 15px;
+            color: #4a5568;
+            background: #f8fafc;
+            padding: 12px;
             border-radius: 8px;
-            margin-top: 10px;
             text-align: left;
-            line-height: 1.6;
+            border: 1px solid #e2e8f0;
+        }
+        .feedback {
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 10px;
         }
 
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.03); }
+            50% { transform: scale(1.02); }
             100% { transform: scale(1); }
         }
     </style>
@@ -104,40 +135,51 @@
 <body>
 
 <div class="container">
-    <h1>Chấm Điểm Tiếng Trung</h1>
+    <h1>Luyện Từ Đơn Tiếng Trung</h1>
+    <p class="subtitle">Chấm điểm chính xác theo từng chữ</p>
     
     <div class="word-box">
-        <p class="chinese-text" id="target-cn">我想学汉语</p>
-        <p class="pinyin" id="target-pinyin">w\u01d2 xi\u0103ng xu\u00e9 H\u00e0ny\u01d4</p>
+        <p class="chinese-text" id="target-cn">苹果</p>
+        <p class="pinyin" id="target-pinyin">píngguǒ</p>
+        <p class="meaning" id="target-meaning">(Quả táo)</p>
     </div>
 
-    <button class="btn" id="record-btn">Nhấn để nói</button>
+    <button class="btn" id="record-btn">Nhấn để đọc từ này</button>
 
     <div class="result-section" id="result-section">
-        <div class="score" id="score-display">0%</div>
-        
+        <div class="progress-container">
+            <div class="progress-correct" id="bar-correct" style="width: 0%;">Đúng: 0%</div>
+            <div class="progress-wrong" id="bar-wrong" style="width: 0%;">Sai: 0%</div>
+        </div>
+
         <div class="details-box">
-            • Từ mẫu: <strong id="show-target">...</strong> (Có <span id="target-len">0</span> chữ)<br>
-            • Bạn đọc: <strong id="user-transcript" style="color: #3b82f6;">...</strong><br>
-            • Kết quả: <span id="match-stats" style="font-weight: bold; color: #1e293b;">Đúng 0 / Sai 0</span>
+            • Bạn vừa đọc: <strong id="user-transcript" style="color: #3498db;">...</strong><br>
+            • Kết quả chi tiết: <span id="match-stats" style="font-weight: bold;">Đúng 0 / Sai 0 chữ</span>
         </div>
         
-        <p id="feedback-msg" style="font-weight: 600; margin-top: 15px;"></p>
+        <p class="feedback" id="feedback-msg"></p>
         
-        <button class="btn" id="next-btn" style="background-color: #3b82f6; margin-top: 15px;">Đổi câu ngẫu nhiên</button>
+        <button class="btn" id="next-btn" style="background-color: #3498db; margin-top: 15px; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);">Từ đơn tiếp theo</button>
     </div>
 </div>
 
 <script>
-    // Danh sách câu mẫu dài một chút để dễ chấm đúng/sai từng chữ
+    // Danh sách các từ đơn (từ ghép 2-3 chữ phổ biến) kèm nghĩa tiếng Việt
     const wordList = [
-        { cn: "我想学汉语", pinyin: "wǒ xiǎng xué Hànyǔ" },
-        { cn: "今天天气很好", pinyin: "jīntiān tiānqì hěn hǎo" },
-        { cn: "你是哪国人", pinyin: "nǐ shì nǎ guó rén" },
-        { cn: "很高兴认识你", pinyin: "hěn gāoxìng rènshi nǐ" },
-        { cn: "我想吃中国菜", pinyin: "wǒ xiǎng chī Zhōngguócài" },
-        { cn: "你会說英语吗", pinyin: "nǐ huì shuō Yīngyǔ ma" },
-        { cn: "请问洗手间在哪", pinyin: "qǐngwèn xǐshǒujiān zài nǎ" }
+        { cn: "苹果", pinyin: "píngguǒ", meaning: "Quả táo" },
+        { cn: "谢谢", pinyin: "xièxie", meaning: "Cảm ơn" },
+        { cn: "咖啡", pinyin: "kāfēi", meaning: "Cà phê" },
+        { cn: "学生", pinyin: "xuéshēng", meaning: "Học sinh" },
+        { cn: "老师", pinyin: "lǎoshī", meaning: "Giáo viên" },
+        { cn: "猫咪", pinyin: "māomī", meaning: "Con mèo" },
+        { cn: "电脑", pinyin: "diànnǎo", meaning: "Máy tính" },
+        { cn: "手机", pinyin: "shǒujī", meaning: "Điện thoại" },
+        { cn: "跑步", pinyin: "pǎobù", meaning: "Chạy bộ" },
+        { cn: "喝水", pinyin: "hē shuǐ", meaning: "Uống nước" },
+        { cn: "再见", pinyin: "zàijiàn", meaning: "Tạm biệt" },
+        { cn: "喜欢", pinyin: "xǐhuan", meaning: "Thích" },
+        { cn: "飞机", pinyin: "fēijī", meaning: "Máy bay" },
+        { cn: "中国", pinyin: "Zhōngguó", meaning: "Trung Quốc" }
     ];
 
     let currentWord = wordList[0];
@@ -156,12 +198,12 @@
     const nextBtn = document.getElementById('next-btn');
     const targetCnDisplay = document.getElementById('target-cn');
     const targetPinyinDisplay = document.getElementById('target-pinyin');
+    const targetMeaningDisplay = document.getElementById('target-meaning');
     const resultSection = document.getElementById('result-section');
     const userTranscript = document.getElementById('user-transcript');
-    const scoreDisplay = document.getElementById('score-display');
+    const barCorrect = document.getElementById('bar-correct');
+    const barWrong = document.getElementById('bar-wrong');
     const feedbackMsg = document.getElementById('feedback-msg');
-    const showTarget = document.getElementById('show-target');
-    const targetLen = document.getElementById('target-len');
     const matchStats = document.getElementById('match-stats');
 
     let isRecording = false;
@@ -180,75 +222,74 @@
 
     recognition.onend = () => {
         isRecording = false;
-        recordBtn.textContent = "Nhấn để nói";
+        recordBtn.textContent = "Nhấn để đọc từ này";
         recordBtn.classList.remove('recording');
     };
 
     recognition.onresult = (event) => {
         const resultText = event.results[0][0].transcript;
         
-        // Làm sạch loại bỏ dấu câu
+        // Làm sạch loại bỏ dấu câu phát sinh
         const cleanResult = resultText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！]/g,"");
         const cleanTarget = currentWord.cn.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()？。，！]/g,"");
 
-        // Đếm số chữ trùng khớp chính xác
+        // Đếm số chữ trùng khớp chính xác từng chữ một
         let correctCount = 0;
         let targetChars = cleanTarget.split('');
         let resultChars = cleanResult.split('');
 
-        // Thuật toán đếm số ký tự khớp
         targetChars.forEach(char => {
             const index = resultChars.indexOf(char);
             if (index !== -1) {
                 correctCount++;
-                resultChars.splice(index, 1); // Xóa ký tự đã khớp để tránh đếm trùng
+                resultChars.splice(index, 1); 
             }
         });
 
         let totalTarget = targetChars.length;
         let wrongCount = totalTarget - correctCount;
         
-        // Tính % điểm thực tế dựa trên số chữ đúng
-        let score = Math.round((correctCount / totalTarget) * 100);
+        // Tính tỷ lệ phần trăm Đúng và Sai rõ ràng
+        let correctPercent = Math.round((correctCount / totalTarget) * 100);
+        let wrongPercent = 100 - correctPercent;
 
-        // Hiển thị lên giao diện
-        showTarget.textContent = currentWord.cn;
-        targetLen.textContent = totalTarget;
-        userTranscript.textContent = resultText;
+        // Cập nhật giao diện thanh tiến trình (Progress Bar)
+        barCorrect.style.width = correctPercent + "%";
+        barCorrect.textContent = correctPercent > 0 ? `Đúng: ${correctPercent}%` : "";
+        
+        barWrong.style.width = wrongPercent + "%";
+        barWrong.textContent = wrongPercent > 0 ? `Sai: ${wrongPercent}%` : "";
+
+        // Hiển thị chữ người dùng đã đọc và số lượng chi tiết
+        userTranscript.textContent = resultText ? resultText : "(Không rõ từ gì)";
         matchStats.textContent = `Đúng ${correctCount} / Sai ${wrongCount} chữ`;
         
-        displayResult(score);
+        // Đưa ra lời khuyên đánh giá
+        if (correctPercent === 100) {
+            feedbackMsg.textContent = "🎉 Tuyệt hảo! Đúng 100%.";
+            feedbackMsg.style.color = "#2ecc71";
+        } else if (correctPercent >= 50) {
+            feedbackMsg.textContent = "👍 Khá tốt! Bạn bị phát âm lệch mất vài chữ.";
+            feedbackMsg.style.color = "#e67e22";
+        } else {
+            feedbackMsg.textContent = "❌ Sai rồi! Hãy nhìn kỹ phiên âm pinyin và đọc lại nhé.";
+            feedbackMsg.style.color = "#e74c3c";
+        }
+
+        resultSection.style.display = 'block';
     };
 
     recognition.onerror = (event) => {
-        alert("Lỗi nhận diện hoặc chưa nói gì: " + event.error);
+        alert("Lỗi hoặc chưa nhận diện được âm thanh. Xin vui lòng thử lại!");
     };
 
-    function displayResult(score) {
-        resultSection.style.display = 'block';
-        scoreDisplay.textContent = score + "%";
-        scoreDisplay.className = "score";
-        
-        if (score >= 85) {
-            scoreDisplay.classList.add('good');
-            feedbackMsg.textContent = "Xuất sắc! Phát âm rất chuẩn xác.";
-            feedbackMsg.className = "good";
-        } else if (score >= 50) {
-            scoreDisplay.classList.add('average');
-            feedbackMsg.textContent = "Tạm được! Bạn bị sai một vài chữ, hãy thử lại nhé.";
-            feedbackMsg.className = "average";
-        } else {
-            scoreDisplay.classList.add('bad');
-            feedbackMsg.textContent = "Sai hơi nhiều rồi! Cố gắng đọc rõ ràng từng chữ nha.";
-            feedbackMsg.className = "bad";
-        }
-    }
-
+    // Đổi sang từ đơn ngẫu nhiên mới
     nextBtn.addEventListener('click', () => {
         const randomIndex = Math.floor(Math.random() * wordList.length);
         currentWord = wordList[randomIndex];
         targetCnDisplay.textContent = currentWord.cn;
         targetPinyinDisplay.textContent = currentWord.pinyin;
+        targetMeaningDisplay.textContent = `(${currentWord.meaning})`;
         resultSection.style.display = 'none';
     });
 </script>
